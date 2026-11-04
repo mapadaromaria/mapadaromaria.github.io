@@ -73,6 +73,11 @@ header small{display:block;font-weight:500;text-transform:none;letter-spacing:0;
 #filtros button .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle;box-shadow:0 0 0 1.5px #fff inset}
 #corpo{flex:1;display:flex;min-height:0}
 #lista{width:var(--largura-lateral);background:var(--cor-painel);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-right:1px solid var(--cor-borda)}
+#ordenar{display:none;position:sticky;top:0;z-index:2;background:var(--cor-painel);border-bottom:1px solid var(--cor-borda);padding:8px 12px;gap:6px;align-items:center;font-size:12px;font-weight:600;color:var(--texto-suave)}
+body.temLocal #ordenar{display:flex}
+#ordenar button{font-family:var(--fonte);font-weight:700;font-size:12px;border:1.5px solid var(--azul);background:transparent;color:var(--azul);padding:4px 10px;border-radius:999px;cursor:pointer}
+#ordenar button.on{background:var(--azul);color:#fff}
+#lista .dist{color:var(--azul);font-weight:700;font-size:12px;margin-top:2px}
 #lista .item{display:flex;gap:12px;padding:11px 14px;border-bottom:1px solid var(--cor-borda);cursor:pointer;align-items:flex-start}
 #lista .item:nth-child(even){background:#faf7f0}
 #lista .item:hover,#lista .item.sel{background:#e9eef9}
@@ -2540,22 +2545,22 @@ const PONTOS = [
   {n:32, num:15, rotulo:"Ambulância", nome:"Ambulância — Domus Mariae", cat:"emergencia", desc:"Ambulância no acesso de viaturas pela Av. Medianeira, em frente à Domus Mariae. Ponto de saúde com desfibrilador.", lat:-29.700550, lng:-53.811731},
   {n:33, num:15, rotulo:"Ambulância", nome:"Ambulância — Mater Dei", cat:"emergencia", desc:"Ambulância junto ao Salão Mater Dei, no acesso pela Rua General Osório. Ponto de saúde com desfibrilador.", lat:-29.701698, lng:-53.811322},
   {n:34, num:15, rotulo:"Ambulância", nome:"Ambulância — Praça da Bíblia", cat:"emergencia", desc:"Ambulância no acesso pela Rua Heitor Campos, junto à Praça da Bíblia. Ponto de saúde com desfibrilador.", lat:-29.701690, lng:-53.808858},
-  {n:16, rotulo:"Banheiros", nome:"Salão Mater Dei / Sanitários", cat:"banheiros", desc:"Centro Comunitário Mater Dei — banheiros.", lat:-29.701560, lng:-53.810979},
+  {n:16, rota:true, rotulo:"Banheiros", nome:"Salão Mater Dei / Sanitários", cat:"banheiros", desc:"Centro Comunitário Mater Dei — banheiros.", lat:-29.701560, lng:-53.810979},
   {n:17, rotulo:"Reservatório", nome:"Reservatório", cat:"servicos", desc:"Reservatório de água (reserva técnica de incêndio). Área restrita.", lat:-29.701315, lng:-53.811123},
-  {n:18, rotulo:"Doces", horario:"9h às 19h (enquanto durarem os estoques)", nome:"Salão Paroquial e venda dos doces", cat:"alimentacao", desc:"Salão Paroquial — venda dos doces da Romaria.", lat:-29.701271, lng:-53.811455},
+  {n:18, rota:true, rotulo:"Doces", horario:"9h às 19h (enquanto durarem os estoques)", nome:"Salão Paroquial e venda dos doces", cat:"alimentacao", desc:"Salão Paroquial — venda dos doces da Romaria.", lat:-29.701271, lng:-53.811455},
   {n:19, rotulo:"Polícia / BM", nome:"Estações móveis Polícia Civil e Brigada Militar", cat:"emergencia", desc:"Postos móveis da Polícia Civil e Brigada Militar na Av. Medianeira.", lat:-29.700194, lng:-53.811716},
-  {n:20, rotulo:"Domus Mariae", nome:"Domus Mariae (livraria e cafeteria)", cat:"alimentacao", desc:"Livraria e cafeteria (Dear Santa).", lat:-29.700527, lng:-53.811503},
+  {n:20, rota:true, rotulo:"Domus Mariae", nome:"Domus Mariae (livraria e cafeteria)", cat:"alimentacao", desc:"Livraria e cafeteria (Dear Santa).", lat:-29.700527, lng:-53.811503},
   {n:21, rotulo:"Playground", zoomRotulo:18.4, nome:"Playground", cat:"kids", desc:"Playground (estrutura permanente).", lat:-29.700516, lng:-53.810141},
   {n:22, rotulo:"Banheiros", nome:"Banheiros ao lado da Basílica", cat:"banheiros", desc:"Sanitários na lateral da Basílica.", lat:-29.700000, lng:-53.810879},
   {n:23, rotulo:"Banheiros", zoomRotulo:18.4, nome:"Banheiros (lateral da Basílica)", cat:"banheiros", desc:"Sanitários na outra lateral da Basílica.", lat:-29.699696, lng:-53.810626},
   {n:24, rotulo:"Cripta", zoomRotulo:18.4, nome:"Cripta", cat:"celebracao", desc:"Cripta da Basílica.", lat:-29.699752, lng:-53.810602},
-  {n:25, rotulo:"Almoço · Ginásio", nome:"Ginásio — Almoço", cat:"alimentacao", desc:"Almoço servido no ginásio.", lat:-29.701434, lng:-53.811337},
-  {n:26, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Av. Medianeira (Basílica)", cat:"acessos", desc:"Acesso ao parque pela Av. Medianeira, junto à Basílica.", lat:-29.699169, lng:-53.810891},
-  {n:27, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Av. Medianeira (Tenda)", cat:"acessos", desc:"Acesso ao parque pela Av. Medianeira, junto à tenda.", lat:-29.700047, lng:-53.811369},
-  {n:28, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Av. Medianeira (Salão)", cat:"acessos", desc:"Acesso ao parque pela Av. Medianeira, junto ao Salão Paroquial.", lat:-29.700623, lng:-53.811824},
-  {n:29, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Rua Gen. Osório (Mater Dei)", cat:"acessos", desc:"Acesso ao parque pela Rua General Osório, junto ao Salão Mater Dei.", lat:-29.701724, lng:-53.811445},
-  {n:30, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Rua Heitor Campos (Estacionamento)", cat:"acessos", desc:"Acesso ao parque pela Rua Pref. Heitor Campos, junto ao estacionamento.", lat:-29.703151, lng:-53.807656},
-  {n:31, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Rua Heitor Campos (Parque)", cat:"acessos", desc:"Acesso ao parque pela Rua Pref. Heitor Campos, no meio do parque.", lat:-29.701521, lng:-53.808743},
+  {n:25, rota:true, rotulo:"Almoço · Ginásio", nome:"Ginásio — Almoço", cat:"alimentacao", desc:"Almoço servido no ginásio.", lat:-29.701434, lng:-53.811337},
+  {n:26, rota:true, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Av. Medianeira (Basílica)", cat:"acessos", desc:"Acesso ao parque pela Av. Medianeira, junto à Basílica.", lat:-29.699169, lng:-53.810891},
+  {n:27, rota:true, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Av. Medianeira (Tenda)", cat:"acessos", desc:"Acesso ao parque pela Av. Medianeira, junto à tenda.", lat:-29.700047, lng:-53.811369},
+  {n:28, rota:true, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Av. Medianeira (Salão)", cat:"acessos", desc:"Acesso ao parque pela Av. Medianeira, junto ao Salão Paroquial.", lat:-29.700623, lng:-53.811824},
+  {n:29, rota:true, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Rua Gen. Osório (Mater Dei)", cat:"acessos", desc:"Acesso ao parque pela Rua General Osório, junto ao Salão Mater Dei.", lat:-29.701724, lng:-53.811445},
+  {n:30, rota:true, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Rua Heitor Campos (Estacionamento)", cat:"acessos", desc:"Acesso ao parque pela Rua Pref. Heitor Campos, junto ao estacionamento.", lat:-29.703151, lng:-53.807656},
+  {n:31, rota:true, rotulo:"Acesso", zoomRotulo:18.2, nome:"Acesso — Rua Heitor Campos (Parque)", cat:"acessos", desc:"Acesso ao parque pela Rua Pref. Heitor Campos, no meio do parque.", lat:-29.701521, lng:-53.808743},
 ];
 
 
@@ -2651,6 +2656,7 @@ async function iniciar(){
       const ll = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       if (!mLoc) { const d = document.createElement("div"); d.className = "pino-wrap"; d.style.transform = `rotate(${-ANG}deg)`; d.innerHTML = `<div class="ponto-azul"></div>`; mLoc = new AdvancedMarkerElement({ map: mapa, position: ll, content: d, title: "Minha localização", zIndex: 60 }); }
       else mLoc.position = ll;
+      minhaPos = ll; ordem = "distancia"; document.body.classList.add("temLocal"); montarLista();
       mapa.moveCamera({ center: ll, zoom: Math.max(mapa.getZoom(), 18) });
     }, () => alert("Não foi possível obter a localização. Verifique a permissão de GPS do navegador."), { enableHighAccuracy: true, timeout: 8000 });
   };
@@ -2785,11 +2791,29 @@ function aplicarFiltro(f){
 }
 
 // ---------- lista ----------
+let minhaPos = null, ordem = "numero";
+function distM(a, b){
+  const R = 6371000, r = Math.PI/180;
+  const dLat = (b.lat-a.lat)*r, dLng = (b.lng-a.lng)*r, m = Math.cos(a.lat*r)*Math.cos(b.lat*r);
+  const x = Math.sin(dLat/2)**2 + m*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+const textoDist = m => m < 15 ? "a poucos passos" : m < 1000 ? `a ${Math.round(m/5)*5} m` : `a ${(m/1000).toFixed(1).replace(".", ",")} km`;
 function montarLista(){
   elLista.innerHTML = "";
-  PONTOS.filter(p => filtroAtual === "todos" || p.cat === filtroAtual).forEach(p => {
+  const barra = document.createElement("div"); barra.id = "ordenar";
+  barra.innerHTML = `<span>Ordenar:</span><button data-ord="numero">Nº do ponto</button><button data-ord="distancia">Mais perto</button>`;
+  barra.querySelectorAll("button").forEach(b => {
+    if (b.dataset.ord === ordem) b.classList.add("on");
+    b.onclick = () => { ordem = b.dataset.ord; montarLista(); };
+  });
+  elLista.appendChild(barra);
+  let lista = PONTOS.filter(p => filtroAtual === "todos" || p.cat === filtroAtual);
+  if (minhaPos && ordem === "distancia") lista = [...lista].sort((a,b) => distM(minhaPos,a) - distM(minhaPos,b));
+  lista.forEach(p => {
     const d = document.createElement("div"); d.className = "item"; d.dataset.n = p.n;
-    d.innerHTML = `<div class="num" style="background:${corCat(p.cat)}">${p.num||p.n}</div><div><div class="nome">${p.nome}</div><div class="cat">${CATS[p.cat].nome}</div></div>`;
+    const dist = minhaPos ? `<div class="dist">${textoDist(distM(minhaPos, p))}</div>` : "";
+    d.innerHTML = `<div class="num" style="background:${corCat(p.cat)}">${p.num||p.n}</div><div><div class="nome">${p.nome}</div><div class="cat">${CATS[p.cat].nome}</div>${dist}</div>`;
     d.onclick = () => { document.body.classList.remove("listaAberta"); arrastou = false; mapa.panTo({lat:p.lat,lng:p.lng}); if (mapa.getZoom() < 18) mapa.setZoom(18); abrir(p); };
     elLista.appendChild(d);
   });
