@@ -125,6 +125,11 @@ body.totem .leaflet-popup-content{font-size:18px}
 .rotulo-entrada{border-color:var(--dourado)!important}
 .pino-wrap.sel .pino{transform:rotate(-45deg) scale(1.3);box-shadow:0 0 0 4px rgba(227,165,43,.9),0 2px 8px rgba(0,0,0,.6)}
 .pino-wrap.sel .rotulo{display:block!important}
+#btnLoc.buscando{animation:pulsaLoc 1s ease-in-out infinite}
+#btnLoc.ligado{color:#2a7fff}
+@keyframes pulsaLoc{0%,100%{opacity:1}50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){#btnLoc.buscando{animation:none;opacity:.6}}
+#aviso{max-width:min(78vw,340px);line-height:1.35;box-shadow:0 2px 10px rgba(0,0,0,.3)}
 .ponto-azul{width:18px;height:18px;border-radius:50%;background:#2a7fff;border:3px solid #fff;box-shadow:0 0 0 6px rgba(42,127,255,.3),0 1px 4px rgba(0,0,0,.5);margin-bottom:9px}
 #btnZap{display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:#25d366;color:#fff;font-weight:700;font-size:13px;padding:7px 12px;border-radius:999px;white-space:nowrap}
 .pop .hor{margin-top:6px;font-weight:600;color:var(--azul)}
@@ -2649,15 +2654,56 @@ async function iniciar(){
   });
   // minha localização
   let mLoc = null;
-  document.getElementById("btnLoc").onclick = () => {
-    if (!navigator.geolocation) return alert("Este aparelho não informa a localização.");
-    navigator.geolocation.getCurrentPosition(pos => {
-      const ll = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      if (!mLoc) { const d = document.createElement("div"); d.className = "pino-wrap"; d.style.transform = `rotate(${-ANG}deg)`; d.innerHTML = `<div class="ponto-azul"></div>`; mLoc = new AdvancedMarkerElement({ map: mapa, position: ll, content: d, title: "Minha localização", zIndex: 60 }); }
-      else mLoc.position = ll;
-      minhaPos = ll; ordem = "distancia"; document.body.classList.add("temLocal"); montarLista();
+  const elAviso = document.getElementById("aviso");
+  let avisoTimer = null;
+  function aviso(txt, ms){
+    clearTimeout(avisoTimer);
+    elAviso.textContent = txt; elAviso.style.display = "block";
+    if (ms) avisoTimer = setTimeout(() => { elAviso.style.display = "none"; }, ms);
+  }
+  const btnLoc = document.getElementById("btnLoc");
+  let vigia = null, tentouSemPrecisao = false;
+
+  function mostrarPos(pos){
+    const ll = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    btnLoc.classList.remove("buscando"); btnLoc.classList.add("ligado");
+    if (!mLoc) { const d = document.createElement("div"); d.className = "pino-wrap"; d.style.transform = `rotate(${-ANG}deg)`; d.innerHTML = `<div class="ponto-azul"></div>`; mLoc = new AdvancedMarkerElement({ map: mapa, position: ll, content: d, title: "Minha localização", zIndex: 60 }); }
+    else mLoc.position = ll;
+    const primeira = !minhaPos;
+    const andou = minhaPos && distM(minhaPos, ll) > 8;
+    minhaPos = ll;
+    if (primeira || andou) { if (primeira) ordem = "distancia"; document.body.classList.add("temLocal"); montarLista(); }
+    if (primeira) {
       mapa.moveCamera({ center: ll, zoom: Math.max(mapa.getZoom(), 18) });
-    }, () => alert("Não foi possível obter a localização. Verifique a permissão de GPS do navegador."), { enableHighAccuracy: true, timeout: 8000 });
+      const prec = Math.round(pos.coords.accuracy || 0);
+      aviso(prec > 60 ? `Localização aproximada (±${prec} m). Melhora a céu aberto.` : "Pronto — a lista está ordenada pelo que está mais perto.", 6000);
+    }
+  }
+
+  function falhouPos(err){
+    // 1º erro com alta precisão: tenta de novo sem ela, que é bem mais rápido e funciona sob cobertura
+    if (!tentouSemPrecisao && err && err.code !== 1) {
+      tentouSemPrecisao = true;
+      if (vigia !== null) { navigator.geolocation.clearWatch(vigia); }
+      vigia = navigator.geolocation.watchPosition(mostrarPos, falhouPos, { enableHighAccuracy: false, timeout: 30000, maximumAge: 60000 });
+      return;
+    }
+    if (vigia !== null) { navigator.geolocation.clearWatch(vigia); vigia = null; }
+    btnLoc.classList.remove("buscando");
+    const cod = err ? err.code : 0;
+    aviso(cod === 1 ? "Localização bloqueada para este site. No iPhone: Ajustes → Privacidade e Segurança → Serviços de Localização → Safari → Ao Usar o App. Depois recarregue a página."
+        : cod === 3 ? "Demorou para achar o sinal. Fique a céu aberto, longe de paredes, e toque de novo."
+        : "Sinal de GPS indisponível agora. Tente de novo em alguns segundos, a céu aberto.", 12000);
+  }
+
+  btnLoc.onclick = () => {
+    if (!navigator.geolocation || !window.isSecureContext) return aviso("Este navegador não informa a localização nesta página.", 8000);
+    if (minhaPos) { mapa.moveCamera({ center: minhaPos, zoom: Math.max(mapa.getZoom(), 18) }); return; }
+    if (vigia !== null) return;                    // já está procurando
+    tentouSemPrecisao = false;
+    btnLoc.classList.add("buscando");
+    aviso("Procurando sua localização…", 0);
+    vigia = navigator.geolocation.watchPosition(mostrarPos, falhouPos, { enableHighAccuracy: true, timeout: 20000, maximumAge: 15000 });
   };
   // WhatsApp
   document.getElementById("btnZap").href = "https://wa.me/?text=" + encodeURIComponent("Mapa da 83ª Romaria da Medianeira — Parque da Medianeira: " + LINK_SITE);
